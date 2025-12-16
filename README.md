@@ -74,15 +74,15 @@ This tool performs comprehensive security analysis of AWS IAM configurations to 
 ### Option 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/aws-iam-security-analyzer.git
-cd aws-iam-security-analyzer
+git clone https://github.com/snblaise/iam-sec-analyzer.git
+cd iam-sec-analyzer
 pip install -r requirements.txt
 ```
 
 ### Option 2: Direct Script Usage
 
 ```bash
-wget https://raw.githubusercontent.com/yourusername/aws-iam-security-analyzer/main/iam_analyzer.py
+wget https://raw.githubusercontent.com/snblaise/iam-sec-analyzer/master/iam_analyzer.py
 pip install boto3
 python3 iam_analyzer.py
 ```
@@ -157,22 +157,17 @@ IAM SECURITY ANALYSIS RESULTS
 ## 🏗️ Project Structure
 
 ```
-aws-iam-security-analyzer/
+iam-sec-analyzer/
 ├── iam_analyzer.py          # Main analyzer script
 ├── requirements.txt         # Python dependencies
 ├── README.md               # This file
 ├── LICENSE                 # MIT License
+├── trust-policy.json       # Lambda trust policy template
 ├── examples/
-│   ├── vulnerable-policies/    # Example vulnerable IAM policies
-│   ├── secure-policies/        # Example secure IAM policies
-│   └── sample-output.json      # Sample scan output
-├── labs/
-│   ├── lab1-setup.md          # Lab: Setting up vulnerable environment
-│   ├── lab2-detection.md      # Lab: Detecting vulnerabilities
-│   └── lab3-remediation.md    # Lab: Fixing issues
-└── docs/
-    ├── privilege-escalation.md # Detailed escalation path documentation
-    └── best-practices.md       # IAM security best practices
+│   ├── secure-policy.json      # Example secure IAM policy
+│   └── vulnerable-policy.json  # Example vulnerable IAM policy
+└── labs/
+    └── lab1-setup.md          # Lab: Setting up vulnerable environment
 ```
 
 ## 🎓 Learning Labs
@@ -268,12 +263,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👤 Author
 
-**AWS Community Builder - Security Series**
+**Blaise Ngwa**
 
-- 📝 Medium: [Your Medium Profile]
-- 💼 LinkedIn: [Your LinkedIn]
-- 🐦 Twitter: [@YourHandle]
-- 🌐 Website: [Your Website]
+- 💼 LinkedIn: [linkedin.com/in/blaisengwa](https://linkedin.com/in/blaisengwa)
+- 🐦 Twitter: [@blaisengwa](https://twitter.com/blaisengwa)
+- 🌐 GitHub: [github.com/snblaise](https://github.com/snblaise)
 
 ## 🙏 Acknowledgments
 
