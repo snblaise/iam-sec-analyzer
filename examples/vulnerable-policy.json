@@ -1,0 +1,126 @@
+{
+  "PolicyName": "VulnerableDevPolicy",
+  "Description": "Example of a vulnerable IAM policy with privilege escalation paths",
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "PrivilegeEscalationPath1",
+        "Effect": "Allow",
+        "Action": [
+          "iam:CreatePolicy",
+          "iam:AttachUserPolicy"
+        ],
+        "Resource": "*",
+        "Comment": "VULNERABLE: Allows user to create and attach policies to themselves"
+      },
+      {
+        "Sid": "PrivilegeEscalationPath2",
+        "Effect": "Allow",
+        "Action": [
+          "iam:PassRole",
+          "lambda:CreateFunction",
+          "lambda:InvokeFunction"
+        ],
+        "Resource": "*",
+        "Comment": "VULNERABLE: Allows passing privileged roles to Lambda and executing code"
+      },
+      {
+        "Sid": "PrivilegeEscalationPath3",
+        "Effect": "Allow",
+        "Action": [
+          "iam:UpdateAssumeRolePolicy",
+          "sts:AssumeRole"
+        ],
+        "Resource": "*",
+        "Comment": "VULNERABLE: Allows modifying trust policies and assuming roles"
+      },
+      {
+        "Sid": "OverlyBroadPermissions",
+        "Effect": "Allow",
+        "Action": [
+          "s3:*"
+        ],
+        "Resource": "*",
+        "Comment": "VULNERABLE: Wildcard permissions on all S3 buckets"
+      },
+      {
+        "Sid": "DangerousInlinePolicy",
+        "Effect": "Allow",
+        "Action": [
+          "iam:PutUserPolicy",
+          "iam:PutRolePolicy"
+        ],
+        "Resource": "*",
+        "Comment": "VULNERABLE: Allows creating inline policies with any permissions"
+      },
+      {
+        "Sid": "CredentialManipulation",
+        "Effect": "Allow",
+        "Action": [
+          "iam:CreateAccessKey",
+          "iam:CreateLoginProfile"
+        ],
+        "Resource": "arn:aws:iam::*:user/*",
+        "Comment": "VULNERABLE: Can create credentials for other users"
+      }
+    ]
+  },
+  "Vulnerabilities": [
+    {
+      "Type": "Privilege Escalation",
+      "Severity": "Critical",
+      "Path": "create_policy_attach",
+      "Description": "User can create a policy with admin permissions and attach it to themselves",
+      "Exploitation": "1. Create policy with admin access\n2. Attach to self\n3. Gain full AWS account access"
+    },
+    {
+      "Type": "Privilege Escalation",
+      "Severity": "Critical",
+      "Path": "pass_role_lambda",
+      "Description": "User can pass a privileged role to Lambda and execute arbitrary code",
+      "Exploitation": "1. Create Lambda function with privileged role\n2. Execute function with elevated permissions\n3. Access restricted resources"
+    },
+    {
+      "Type": "Privilege Escalation",
+      "Severity": "Critical",
+      "Path": "update_assume_role",
+      "Description": "User can modify role trust policies and assume privileged roles",
+      "Exploitation": "1. Update admin role trust policy\n2. Add self as trusted principal\n3. Assume admin role"
+    },
+    {
+      "Type": "Lateral Movement",
+      "Severity": "High",
+      "Path": "create_access_key",
+      "Description": "User can create access keys for other users including admins",
+      "Exploitation": "1. Create access key for admin user\n2. Use credentials to access account as admin"
+    }
+  ],
+  "RemediationSteps": [
+    {
+      "Step": 1,
+      "Action": "Remove wildcard permissions",
+      "Details": "Replace 'Resource: *' with specific ARNs"
+    },
+    {
+      "Step": 2,
+      "Action": "Implement permission boundaries",
+      "Details": "Set maximum permissions for developer roles"
+    },
+    {
+      "Step": 3,
+      "Action": "Add conditions to PassRole",
+      "Details": "Restrict which roles can be passed to which services"
+    },
+    {
+      "Step": 4,
+      "Action": "Remove dangerous IAM permissions",
+      "Details": "Developers shouldn't have iam:Put*, iam:Create*, iam:Update* on policies/roles"
+    },
+    {
+      "Step": 5,
+      "Action": "Implement SCPs",
+      "Details": "Use Service Control Policies to prevent privilege escalation at org level"
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "PolicyName": "SecureDevPolicy",
+  "Description": "Example of a secure IAM policy following least privilege principles",
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "S3AccessToProjectBucket",
+        "Effect": "Allow",
+        "Action": [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ],
+        "Resource": [
+          "arn:aws:s3:::project-dev-bucket",
+          "arn:aws:s3:::project-dev-bucket/*"
+        ],
+        "Comment": "SECURE: Specific bucket access only"
+      },
+      {
+        "Sid": "DynamoDBAccessToProjectTables",
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ],
+        "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/project-*",
+        "Comment": "SECURE: Scoped to project tables with specific actions"
+      },
+      {
+        "Sid": "LambdaInvokeOnly",
+        "Effect": "Allow",
+        "Action": [
+          "lambda:InvokeFunction"
+        ],
+        "Resource": "arn:aws:lambda:us-east-1:123456789012:function:project-*",
+        "Comment": "SECURE: Can only invoke, not create or modify functions"
+      },
+      {
+        "Sid": "CloudWatchLogsForDebugging",
+        "Effect": "Allow",
+        "Action": [
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+        ],
+        "Resource": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/project-*",
+        "Comment": "SECURE: Read-only access to project logs"
+      },
+      {
+        "Sid": "EC2ReadOnlyForDevelopment",
+        "Effect": "Allow",
+        "Action": [
+          "ec2:DescribeInstances",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeVpcs"
+        ],
+        "Resource": "*",
+        "Comment": "SECURE: Read-only describe actions that require Resource: *"
+      },
+      {
+        "Sid": "DenyDangerousActions",
+        "Effect": "Deny",
+        "Action": [
+          "iam:*",
+          "organizations:*",
+          "account:*"
+        ],
+        "Resource": "*",
+        "Comment": "SECURE: Explicit deny on IAM and account management"
+      },
+      {
+        "Sid": "DenyUnencryptedS3Upload",
+        "Effect": "Deny",
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::project-dev-bucket/*",
+        "Condition": {
+          "StringNotEquals": {
+            "s3:x-amz-server-side-encryption": "AES256"
+          }
+        },
+        "Comment": "SECURE: Requires encryption for uploads"
+      },
+      {
+        "Sid": "RequireMFAForSensitiveActions",
+        "Effect": "Deny",
+        "Action": [
+          "s3:DeleteObject",
+          "dynamodb:DeleteTable"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "BoolIfExists": {
+            "aws:MultiFactorAuthPresent": "false"
+          }
+        },
+        "Comment": "SECURE: Destructive actions require MFA"
+      }
+    ]
+  },
+  "SecurityFeatures": [
+    {
+      "Feature": "Least Privilege",
+      "Implementation": "Specific actions on specific resources only",
+      "Benefit": "Limits blast radius of compromised credentials"
+    },
+    {
+      "Feature": "Explicit Denies",
+      "Implementation": "Deny IAM and account management actions",
+      "Benefit": "Prevents privilege escalation even if other policies are added"
+    },
+    {
+      "Feature": "Resource ARN Scoping",
+      "Implementation": "All resources limited to project-specific ARNs",
+      "Benefit": "Cannot access resources outside project scope"
+    },
+    {
+      "Feature": "Condition Keys",
+      "Implementation": "MFA and encryption requirements",
+      "Benefit": "Adds additional security controls beyond basic permissions"
+    },
+    {
+      "Feature": "Read-Only vs Write Separation",
+      "Implementation": "Describe actions separate from modify actions",
+      "Benefit": "Debugging capability without risk of changes"
+    }
+  ],
+  "PermissionBoundary": {
+    "Description": "Additional layer to enforce maximum permissions",
+    "PolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "s3:*",
+            "dynamodb:*",
+            "lambda:InvokeFunction",
+            "logs:*",
+            "ec2:Describe*",
+            "cloudwatch:*"
+          ],
+          "Resource": "*"
+        },
+        {
+          "Effect": "Deny",
+          "Action": [
+            "iam:*",
+            "organizations:*",
+            "account:*",
+            "sts:AssumeRole"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  },
+  "BestPractices": [
+    {
+      "Practice": "Use Permission Boundaries",
+      "Details": "Set maximum permissions that cannot be exceeded"
+    },
+    {
+      "Practice": "Implement SCPs",
+      "Details": "Organization-level guardrails to prevent dangerous actions"
+    },
+    {
+      "Practice": "Tag-Based Access Control",
+      "Details": "Use resource tags with condition keys for dynamic permissions"
+    },
+    {
+      "Practice": "Regular Access Reviews",
+      "Details": "Audit and remove unused permissions quarterly"
+    },
+    {
+      "Practice": "Use AWS IAM Access Analyzer",
+      "Details": "Continuous monitoring for overly permissive policies"
+    },
+    {
+      "Practice": "Temporary Credentials",
+      "Details": "Use roles and temporary credentials instead of long-term keys"
+    }
+  ],
+  "ComplianceMapping": {
+    "CIS_AWS_Foundations": [
+      "1.4 - No root account access keys",
+      "1.12 - Credentials unused for 90 days are disabled",
+      "1.16 - Policies attached only to groups or roles"
+    ],
+    "NIST_800-53": [
+      "AC-2 - Account Management",
+      "AC-3 - Access Enforcement",
+      "AC-6 - Least Privilege"
+    ],
+    "PCI_DSS": [
+      "7.1 - Limit access to system components",
+      "7.2 - Establish access control system",
+      "8.7 - All access to databases with user data restricted"
+    ]
+  }
+}
